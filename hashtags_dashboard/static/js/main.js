@@ -1,4 +1,10 @@
 $(document).ready(function() {
+    setup_websocket_consumer();
+});
+
+function setup_websocket_consumer(){
+    var hashtags = {};
+
     let socket = new WebSocket(getWebsocketUrl());
 
     socket.onopen = function(e) {
@@ -9,14 +15,16 @@ $(document).ready(function() {
 
     socket.onmessage = function(event) {
       console.log(`[message] Data received from server: ${event.data}`);
+      var data = JSON.parse(event.data);
+      if(data.hasOwnProperty('key')){
+        hashtags[data.key] = parseInt(data.value);
+      }
     };
 
     socket.onclose = function(event) {
       if (event.wasClean) {
         console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
       } else {
-        // e.g. server process killed or network down
-        // event.code is usually 1006 in this case
         console.log('[close] Connection died');
       }
     };
@@ -24,7 +32,7 @@ $(document).ready(function() {
     socket.onerror = function(error) {
       console.log(`[error] ${error.message}`);
     };
-});
+}
 
 function getWebsocketUrl(){
     const url = new URL(window.location.href);

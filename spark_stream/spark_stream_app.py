@@ -44,6 +44,8 @@ def agg_hashtags(df_rows: DataFrame) -> DataFrame:
         .filter(F.col('hashtag').startswith('#')) \
         .groupBy('hashtag') \
         .count() \
+        .sort(F.col('count').desc())\
+        .limit(10)\
         .withColumnRenamed('hashtag', 'key') \
         .withColumn('value', F.col('count').cast("string")) \
         .drop('count')
