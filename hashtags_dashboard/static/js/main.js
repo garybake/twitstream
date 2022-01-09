@@ -2,7 +2,7 @@ var materialChart;
 var MSG_RESET_THRESHOLD = 10;
 
 $(document).ready(function() {
-    google.charts.load('current', {packages: ['corechart', 'bar']});
+    google.charts.load('current', {packages: ['corechart']});
     google.charts.setOnLoadCallback(drawTitleSubtitle);
 
     setup_websocket_consumer();
@@ -52,32 +52,39 @@ function getWebsocketUrl(){
 }
 
 function formatChartData(hashtag_counts){
-    // Sort by count
     toDict = Object.entries(hashtag_counts);
 
-    // output as [[hdr1, hdr2], [key, val], [key, val]...]
     toDict.sort(function (a, b) {
         return b[1] - a[1];
     });
 
-    toDict.unshift(['Hashtag', 'Count']);
-    return toDict;
+    toDict.forEach(function(part, index) {
+        var hashtag = toDict[index][0];
+        var clr_string = 'color: ' + stringToColour(hashtag);
+        toDict[index].push(clr_string);
+    });
+
+    toDict.unshift(['Hashtag', 'Count', { role: 'style' }]);
+    return toDict.slice(0, 10);;
 }
 
 function updateChart(hashtag_counts){
     var data = formatChartData(hashtag_counts);
     var ccdata = google.visualization.arrayToDataTable(data);
     materialChart.draw(ccdata, materialChart.materialOptions);
-    console.log(JSON.stringify(data));
+//    console.log(JSON.stringify(data));
 }
 
 
 function drawTitleSubtitle() {
     var data = google.visualization.arrayToDataTable([
-        ['Hashtag', 'Count'],
+        ['Hashtag', 'Count', { role: 'style' }],
+        ['', 0, 'color: #FFF'],
     ]);
 
-    materialChart = new google.charts.Bar(document.getElementById('chart_div'));
+    materialChart = new google.visualization.BarChart(document.getElementById('chart_div'));
+    // Dynamic colors don't work on the newer material charts =(
+    //    materialChart = new google.charts.Bar(document.getElementById('chart_div'));
 
     materialChart.materialOptions = {
         chart: {
@@ -93,5 +100,20 @@ function drawTitleSubtitle() {
         bars: 'horizontal'
     };
 
-    materialChart.draw(data, google.charts.Bar.convertOptions(materialChart.materialOptions));
+//    materialChart.draw(data, google.charts.Bar.convertOptions(materialChart.materialOptions));
+    materialChart.draw(data, materialChart.materialOptions);
+}
+
+function stringToColour(str) {
+    // https://stackoverflow.com/questions/3426404/create-a-hexadecimal-colour-based-on-a-string-with-javascript
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    var colour = '#';
+    for (var i = 0; i < 3; i++) {
+        var value = (hash >> (i * 8)) & 0xFF;
+        colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
 }
