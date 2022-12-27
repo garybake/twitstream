@@ -28,4 +28,4 @@ urllib3==1.26.7
 uvicorn==0.16.0
 watchgod==0.7
 websockets==10.1
-wheel==0.36.2
+wheel==0.38.1
